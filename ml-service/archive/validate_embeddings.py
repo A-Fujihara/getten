@@ -1,28 +1,21 @@
+# ARCHIVED — not part of the active build.
+#
+# This was the first working proof that the embedding pipeline worked,
+# using intfloat/multilingual-e5-base with no category labels. It's kept
+# here to show that early thinking, not because it's still in use.
+#
+# The current implementation lives in ml-service/main.py: it uses
+# Snowflake/snowflake-arctic-embed-l-v2.0 and prepends a category label
+# to each text before embedding (see docs/Ten4_Findings.md for why).
+
 import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModel
 
-model_name = "intfloat/multilingual-e5-base"
+model_name = "Snowflake/snowflake-arctic-embed-l-v2.0"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModel.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name, add_pooling_layer=False)
 model.eval()
-
-"""
-    Combine per-token vectors into a single vector representing the whole
-    phrase, using the attention mask to correctly ignore padding tokens.
-
-    Args:
-        last_hidden_states: The model's raw output — one vector per token.
-        attention_mask: Tensor of 1s and 0s marking real tokens (1) vs.
-            padding filler (0).
-
-    Returns:
-        Tensor: A single averaged vector, with padding excluded from the
-            calculation.
-    """
-def average_pool(last_hidden_states, attention_mask):
-    last_hidden = last_hidden_states.masked_fill(~attention_mask[..., None].bool(), 0.0)
-    return last_hidden.sum(dim=1) / attention_mask.sum(dim=1)[..., None]
 
 
 """
@@ -37,10 +30,10 @@ def average_pool(last_hidden_states, attention_mask):
     """
 def embed(text):
     prefixed_text = f"query: {text}"
-    inputs = tokenizer(prefixed_text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    inputs = tokenizer(prefixed_text, return_tensors="pt", truncation=True, padding=True, max_length=8192)
     with torch.no_grad():
         outputs = model(**inputs)
-    pooled = average_pool(outputs.last_hidden_state, inputs["attention_mask"])
+    pooled = outputs[0][:, 0]  # CLS token, not mean pooling
     normalized = F.normalize(pooled, p=2, dim=1)
     return normalized.squeeze()
 

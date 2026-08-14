@@ -53,7 +53,7 @@ cd ml-service
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python3 validate_embeddings.py
+python3 archive/validate_embeddings.py
 ```
 
-`validate_embeddings.py` is a standalone sanity check — it embeds a handful of test phrase pairs and prints their cosine similarity scores, to confirm the embedding pipeline behaves as expected before it's wired into the actual service.
+`validate_embeddings.py` is the original standalone sanity check, it embeds a handful of test phrase pairs and prints their cosine similarity scores, to confirm the embedding pipeline behaves as expected before it's wired into the actual service.
