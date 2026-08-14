@@ -31,7 +31,7 @@ See the "Getting started" section in `README.md` for the ML service. Instruction
 
 ## Code style
 
-- Python: standard PEP 8 conventions. Docstrings on all functions (see `ml-service/validate_embeddings.py` for the expected format).
+- Python: standard PEP 8 conventions. Docstrings on all functions (see `ml-service/main.py` for the expected format).
 - No dependency should be added without a documented reason — this project deliberately favors raw implementations (e.g. manual PyTorch pooling/normalization over the `sentence-transformers` wrapper) where the added understanding is worth more than the convenience, per the project's goals in `docs/`.
 
 ## Environment variables and secrets
