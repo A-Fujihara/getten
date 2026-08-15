@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
+from functools import lru_cache
 import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, AutoModel
@@ -8,23 +9,23 @@ app = FastAPI()
 
 model_name = "Snowflake/snowflake-arctic-embed-l-v2.0"
 
-_tokenizer = None
-_model = None
 
-
+@lru_cache
 def get_embedder():
     """
     Returns (tokenizer, model), loading them from disk/network only on
-    the first real call. FastAPI can override this function in tests to
-    hand back a fake tokenizer/model instead, so tests that don't care
-    about the actual model never pay the cost of loading it.
+    the first real call. lru_cache makes this safe under concurrent
+    requests — the model loads exactly once, even if multiple requests
+    hit /embed at the same time before it's finished loading.
+
+    FastAPI can override this function in tests to hand back a fake
+    tokenizer/model instead, so tests that don't care about the actual
+    model never pay the cost of loading it.
     """
-    global _tokenizer, _model
-    if _tokenizer is None or _model is None:
-        _tokenizer = AutoTokenizer.from_pretrained(model_name)
-        _model = AutoModel.from_pretrained(model_name)
-        _model.eval()
-    return _tokenizer, _model
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name)
+    model.eval()
+    return tokenizer, model
 
 
 class EmbedRequest(BaseModel):
