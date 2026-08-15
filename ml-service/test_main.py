@@ -38,6 +38,16 @@ def fake_get_embedder():
 
 app.dependency_overrides[get_embedder] = fake_get_embedder
 
+
+def teardown_module(module):
+    """
+    Pytest runs this automatically once, after all tests in this file
+    finish. Removes the override so it doesn't leak into other test
+    files that might import the same app expecting the real get_embedder.
+    """
+    app.dependency_overrides.pop(get_embedder, None)
+
+
 client = TestClient(app)
 
 
