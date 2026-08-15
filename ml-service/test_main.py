@@ -69,11 +69,20 @@ def test_embed_rejects_missing_text():
     assert response.status_code == 422
 
 
-def test_embed_rejects_wrong_type():
+def test_embed_rejects_category_wrong_type():
     """
     A request where 'category' is not a string should be rejected.
     """
     response = client.post("/embed", json={"text": "Tool", "category": 123})
+    assert response.status_code == 422
+
+
+def test_embed_rejects_text_wrong_type():
+    """
+    A request where 'text' is not a string should be rejected.
+    Explicitly required by TEN-2's acceptance criteria.
+    """
+    response = client.post("/embed", json={"text": 123, "category": "band"})
     assert response.status_code == 422
 
 
